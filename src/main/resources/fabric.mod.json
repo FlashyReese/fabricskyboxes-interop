@@ -10,6 +10,11 @@
   "contact": {},
   "license": "MIT",
   "environment": "client",
+  "entrypoints": {
+    "modmenu": [
+      "me.flashyreese.mods.fabricskyboxes_interop.client.config.ModMenuApiImpl"
+    ]
+  },
   "mixins": [
     "fsb-interop.mixins.json"
   ],

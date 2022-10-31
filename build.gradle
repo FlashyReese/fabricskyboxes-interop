@@ -8,6 +8,10 @@ group = project.maven_group
 
 repositories {
     maven {
+        name 'TerraformersMC'
+        url 'https://maven.terraformersmc.com'
+    }
+    maven {
         url = "https://api.modrinth.com/maven"
     }
     maven {
@@ -25,7 +29,14 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
     // FabricSkyBoxes
-    modImplementation("io.github.amerebagatelle:fabricskyboxes:0.6.0+mc1.19.2-SNAPSHOT")
+    modImplementation("io.github.amerebagatelle:fabricskyboxes:0.6.0+mc1.19.2-SNAPSHOT") {
+        exclude group: 'net.fabricmc.fabric-api'
+    }
+
+    // Mod Menu
+    modImplementation('com.terraformersmc:modmenu:4.0.6') {
+        exclude group: 'net.fabricmc.fabric-api'
+    }
 }
 
 processResources {

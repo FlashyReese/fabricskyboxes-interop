@@ -1,14 +1,18 @@
 package me.flashyreese.mods.fabricskyboxes_interop.mixin;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import io.github.amerebagatelle.fabricskyboxes.SkyboxManager;
 import io.github.amerebagatelle.fabricskyboxes.resource.SkyboxResourceListener;
 import io.github.amerebagatelle.fabricskyboxes.util.object.MinMaxEntry;
+import me.flashyreese.mods.fabricskyboxes_interop.client.config.FSBInteropConfig;
 import me.flashyreese.mods.fabricskyboxes_interop.utils.ResourceManagerHelper;
 import me.flashyreese.mods.fabricskyboxes_interop.utils.Utils;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.InvalidIdentifierException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,6 +30,8 @@ import java.util.regex.Pattern;
 public class MixinSkyboxResourceListener {
     private final Logger logger = LoggerFactory.getLogger("FSB-Interop");
 
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+
     private static final String OPTIFINE_SKY_PARENT = "optifine/sky";
     private static final Pattern OPTIFINE_SKY_PATTERN = Pattern.compile("optifine/sky/(?<world>\\w+)/(?<name>\\w+).properties$");
     private static final String MCPATCHER_SKY_PARENT = "mcpatcher/sky";
@@ -33,9 +39,10 @@ public class MixinSkyboxResourceListener {
 
     @Inject(method = "reload", at = @At(value = "TAIL"))
     public void reload(ResourceManager manager, CallbackInfo ci) {
-        this.logger.info("Looking for OptiFine/MCPatcher Skies...");
-        manager.findResources("optifine/sky", identifier -> identifier.getPath().endsWith(".png")).forEach((identifier, resource) -> System.out.println(identifier));
-        this.convert(new ResourceManagerHelper(manager));
+        if (FSBInteropConfig.INSTANCE.interoperability) {
+            this.logger.info("Looking for OptiFine/MCPatcher Skies...");
+            this.convert(new ResourceManagerHelper(manager));
+        }
     }
 
     public void convert(ResourceManagerHelper managerAccessor) {
@@ -68,6 +75,9 @@ public class MixinSkyboxResourceListener {
 
                                 InputStream inputStream = resourceManagerHelper.getInputStream(id);
                                 if (inputStream == null) {
+                                    if (FSBInteropConfig.INSTANCE.debugMode) {
+                                        this.logger.error("Error trying to read namespaced identifier: {}", id);
+                                    }
                                     return;
                                 }
 
@@ -75,29 +85,43 @@ public class MixinSkyboxResourceListener {
                                 try {
                                     properties.load(inputStream);
                                 } catch (IOException e) {
+                                    if (FSBInteropConfig.INSTANCE.debugMode) {
+                                        this.logger.error("Error trying to read namespaced identifier: {}", id);
+                                        e.printStackTrace();
+                                    }
                                     return;
                                 } finally {
                                     try {
                                         inputStream.close();
                                     } catch (IOException e) {
-                                        e.printStackTrace();
+                                        if (FSBInteropConfig.INSTANCE.debugMode) {
+                                            this.logger.error("Error trying to close input stream at namespaced identifier: {}", id);
+                                            e.printStackTrace();
+                                        }
                                     }
                                 }
 
                                 Identifier textureId;
                                 if (properties.containsKey("source")) {
                                     String source = properties.getProperty("source");
-                                    if (source.startsWith("./")) {
-                                        textureId = new Identifier(id.getNamespace(), parent.getPath() + String.format("/%s/%s", world, source.substring(2)));
-                                    } else if (source.startsWith("assets/")) {
-                                        int firstIndex = source.indexOf("/") + 1;
-                                        int secondIndex = source.indexOf("/", firstIndex);
-                                        String sourceNamespace = source.substring(firstIndex, secondIndex);
-                                        textureId = new Identifier(sourceNamespace, source.substring(secondIndex + 1));
-                                    } else {
-                                        int firstIndex = source.indexOf("/") + 1;
-                                        String sourceNamespace = source.substring(0, firstIndex - 1);
-                                        textureId = new Identifier(sourceNamespace, source.substring(firstIndex));
+                                    try {
+                                        if (source.startsWith("./")) {
+                                            textureId = new Identifier(id.getNamespace(), parent.getPath() + String.format("/%s/%s", world, source.substring(2)));
+                                        } else if (source.startsWith("assets/")) {
+                                            int firstIndex = source.indexOf("/") + 1;
+                                            int secondIndex = source.indexOf("/", firstIndex);
+                                            String sourceNamespace = source.substring(firstIndex, secondIndex);
+                                            textureId = new Identifier(sourceNamespace, source.substring(secondIndex + 1));
+                                        } else {
+                                            int firstIndex = source.indexOf("/") + 1;
+                                            String sourceNamespace = source.substring(0, firstIndex - 1);
+                                            textureId = new Identifier(sourceNamespace, source.substring(firstIndex));
+                                        }
+                                    } catch (InvalidIdentifierException e) {
+                                        if (FSBInteropConfig.INSTANCE.debugMode) {
+                                            this.logger.error("Illegal character in namespaced identifier: {}", source);
+                                        }
+                                        return;
                                     }
                                 } else {
                                     textureId = new Identifier(id.getNamespace(), parent.getPath() + String.format("/%s/%s.png", world, name));
@@ -105,6 +129,9 @@ public class MixinSkyboxResourceListener {
 
                                 InputStream textureInputStream = resourceManagerHelper.getInputStream(textureId);
                                 if (textureInputStream == null) {
+                                    if (FSBInteropConfig.INSTANCE.debugMode) {
+                                        this.logger.error("Unable to find/read namespaced identifier: {}", textureId);
+                                    }
                                     return;
                                 }
 
@@ -145,6 +172,10 @@ public class MixinSkyboxResourceListener {
         JsonObject conditionsObject = new JsonObject();
         this.processConditions(conditionsObject, properties, world);
         json.add("conditions", conditionsObject);
+
+        if (FSBInteropConfig.INSTANCE.debugMode) {
+            this.logger.info("Output for {} conversion:\n{}", propertiesId, GSON.toJson(json));
+        }
 
         SkyboxManager.getInstance().addSkybox(propertiesId, json);
         this.logger.info("Converted & Added Skybox from {}!", propertiesId);
@@ -250,7 +281,7 @@ public class MixinSkyboxResourceListener {
 
         // World location -> worlds
         JsonArray worlds = new JsonArray();
-        worlds.add(world.equals("world0") ? "minecraft:overworld" : world);
+        worlds.add(world.equals("world0") ? "minecraft:overworld" : world.equals("world1") ? "minecraft:the_end" : world);
         json.add("worlds", worlds);
 
         // Heights -> yRanges
