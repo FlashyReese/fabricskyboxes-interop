@@ -27,6 +27,7 @@ public class FSBInteropConfig {
 
     public boolean interoperability = true;
     public boolean debugMode = false;
+    public boolean clearFSBFormatSky = false;
 
     public static FSBInteropConfig load(File file) {
         FSBInteropConfig config;

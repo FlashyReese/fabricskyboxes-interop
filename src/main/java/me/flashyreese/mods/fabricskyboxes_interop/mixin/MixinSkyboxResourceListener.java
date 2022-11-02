@@ -40,6 +40,10 @@ public class MixinSkyboxResourceListener {
     @Inject(method = "reload", at = @At(value = "TAIL"))
     public void reload(ResourceManager manager, CallbackInfo ci) {
         if (FSBInteropConfig.INSTANCE.interoperability) {
+            if (FSBInteropConfig.INSTANCE.clearFSBFormatSky) {
+                this.logger.warn("Removing existing FSB skies...");
+                SkyboxManager.getInstance().clearSkyboxes();
+            }
             this.logger.info("Looking for OptiFine/MCPatcher Skies...");
             this.convert(new ResourceManagerHelper(manager));
         }
