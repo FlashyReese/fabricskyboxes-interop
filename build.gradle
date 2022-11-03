@@ -15,6 +15,9 @@ repositories {
         url = "https://api.modrinth.com/maven"
     }
     maven {
+        url = "https://maven.flashyreese.me/releases"
+    }
+    maven {
         url = "https://maven.flashyreese.me/snapshots"
     }
 }
@@ -78,6 +81,14 @@ publishing {
         }
     }
     repositories {
+        maven {
+            name = "FlashyReeseReleases"
+            url = "https://maven.flashyreese.me/releases"
+            credentials {
+                username = System.getenv("MAVEN_USERNAME")
+                password = System.getenv("MAVEN_PASSWORD")
+            }
+        }
         maven {
             name = "FlashyReeseSnapshots"
             url = "https://maven.flashyreese.me/snapshots"
