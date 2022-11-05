@@ -10,7 +10,10 @@ import io.github.amerebagatelle.fabricskyboxes.util.object.MinMaxEntry;
 import me.flashyreese.mods.fabricskyboxes_interop.client.config.FSBInteropConfig;
 import me.flashyreese.mods.fabricskyboxes_interop.utils.ResourceManagerHelper;
 import me.flashyreese.mods.fabricskyboxes_interop.utils.Utils;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.resource.ResourceManager;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.InvalidIdentifierException;
 import org.slf4j.Logger;
@@ -40,18 +43,29 @@ public class MixinSkyboxResourceListener {
     @Inject(method = "reload", at = @At(value = "TAIL"))
     public void reload(ResourceManager manager, CallbackInfo ci) {
         if (FSBInteropConfig.INSTANCE.interoperability) {
+            MinecraftClient client = MinecraftClient.getInstance();
             if (FSBInteropConfig.INSTANCE.clearFSBFormatSky) {
                 this.logger.warn("Removing existing FSB skies...");
                 SkyboxManager.getInstance().clearSkyboxes();
+                if (client.player != null) {
+                    client.player.sendMessage(new TranslatableText("fsb-interop.clear_fsb_format_sky.message").formatted(Formatting.RED), false);
+                }
             }
             this.logger.info("Looking for OptiFine/MCPatcher Skies...");
             this.convert(new ResourceManagerHelper(manager));
+
+            if (client.player != null) {
+                client.player.sendMessage(new TranslatableText("fsb-interop.interoperability.message").formatted(Formatting.GOLD), false);
+            }
         }
     }
 
     public void convert(ResourceManagerHelper managerAccessor) {
-        this.convertNamespace(managerAccessor, OPTIFINE_SKY_PARENT, OPTIFINE_SKY_PATTERN);
-        this.convertNamespace(managerAccessor, MCPATCHER_SKY_PARENT, MCPATCHER_SKY_PATTERN);
+        if (FSBInteropConfig.INSTANCE.processOptiFine)
+            this.convertNamespace(managerAccessor, OPTIFINE_SKY_PARENT, OPTIFINE_SKY_PATTERN);
+
+        if (FSBInteropConfig.INSTANCE.processMCPatcher)
+            this.convertNamespace(managerAccessor, MCPATCHER_SKY_PARENT, MCPATCHER_SKY_PATTERN);
     }
 
     /**

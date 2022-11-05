@@ -2,8 +2,14 @@
   "options.fsb-interop.title": "FabricSkyBoxes Interop Configuration",
   "options.fsb-interop.interoperability": "Interoperability",
   "options.fsb-interop.interoperability.tooltip": "If enabled, the mod will attempt to read/load MCPatcher/OptiFine Custom Skies.",
+  "options.fsb-interop.process_optifine": "Process OptiFine",
+  "options.fsb-interop.process_optifine.tooltip": "If enabled, the mod will attempt to read/load OptiFine Custom Skies.",
+  "options.fsb-interop.process_mcpatcher": "Process MCPatcher",
+  "options.fsb-interop.process_mcpatcher.tooltip": "If enabled, the mod will attempt to read/load MCPatcher Custom Skies.",
   "options.fsb-interop.debug_mode": "Debug Mode",
   "options.fsb-interop.debug_mode.tooltip": "If enabled, the mod will output conversion results and error logs in conversion process.",
   "options.fsb-interop.clear_fsb_format_sky": "Clear FSB Format Sky",
-  "options.fsb-interop.clear_fsb_format_sky.tooltip": "If enabled, the mod will remove all native FSB skyboxes. This will break resource packs that are FSB only! Proceed with caution!"
+  "options.fsb-interop.clear_fsb_format_sky.tooltip": "If enabled, the mod will remove all native FSB skyboxes. This will break resource packs that are FSB only! Proceed with caution!",
+  "fsb-interop.clear_fsb_format_sky.message": "FSB-Interop is preventing native FabricSkyBoxes resource packs from loading!",
+  "fsb-interop.interoperability.message": "FSB-Interop is converting MCPatcher/OptiFine custom skies resource packs! Any visual bugs are likely caused by FSB-Interop. Please do not report these issues to FabricSkyBoxes nor Resource Pack creators!"
 }
