@@ -7,7 +7,6 @@ import net.minecraft.util.Identifier;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 public class ResourceManagerHelper {
@@ -18,15 +17,13 @@ public class ResourceManagerHelper {
     }
 
     public Stream<Identifier> searchIn(Identifier parent) {
-        return this.resourceManager.findResources(parent.getPath(), path -> path.getNamespace().equals(parent.getNamespace())).keySet().stream();
+        return this.resourceManager.findResources(parent.getPath(), path -> true).stream();
     }
 
     public InputStream getInputStream(Identifier identifier) {
         try {
-            Optional<Resource> resource = this.resourceManager.getResource(identifier);
-            if (resource.isEmpty())
-                return null;
-            return resource.get().getInputStream();
+            Resource resource = this.resourceManager.getResource(identifier);
+            return resource.getInputStream();
         } catch (IOException e) {
             return null;
         }

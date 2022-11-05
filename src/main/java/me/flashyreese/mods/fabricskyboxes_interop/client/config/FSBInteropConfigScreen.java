@@ -2,11 +2,12 @@ package me.flashyreese.mods.fabricskyboxes_interop.client.config;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -16,7 +17,7 @@ public class FSBInteropConfigScreen extends Screen {
     private final FSBInteropConfig config;
 
     public FSBInteropConfigScreen(Screen parent, FSBInteropConfig config) {
-        super(Text.translatable(getTranslationKey("title")));
+        super(new TranslatableText(getTranslationKey("title")));
         this.parent = parent;
         this.config = config;
     }
@@ -63,8 +64,8 @@ public class FSBInteropConfigScreen extends Screen {
 
     private ButtonWidget createBooleanOptionButton(int x, int y, int width, int height, String key, Consumer<Boolean> consumer, Supplier<Boolean> supplier, Runnable onChange) {
         String translationKey = getTranslationKey(key);
-        Text text = Text.translatable(translationKey);
-        Text tooltipText = Text.translatable(getTooltipKey(translationKey));
+        Text text = new TranslatableText(translationKey);
+        Text tooltipText = new TranslatableText(getTooltipKey(translationKey));
         return new ButtonWidget(x, y, width, height, ScreenTexts.composeToggleText(text, supplier.get()),
                 button -> {
                     boolean newValue = !supplier.get();
