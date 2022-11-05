@@ -177,6 +177,10 @@ public class MixinSkyboxResourceListener {
         this.processConditions(conditionsObject, properties, world);
         json.add("conditions", conditionsObject);
 
+        JsonObject decorationsObject = new JsonObject();
+        decorationsObject.addProperty("showStars", false);
+        json.add("decorations", decorationsObject);
+
         if (FSBInteropConfig.INSTANCE.debugMode) {
             this.logger.info("Output for {} conversion:\n{}", propertiesId, GSON.toJson(json));
         }
