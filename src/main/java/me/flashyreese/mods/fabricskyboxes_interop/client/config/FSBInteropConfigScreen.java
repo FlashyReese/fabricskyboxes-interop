@@ -23,28 +23,36 @@ public class FSBInteropConfigScreen extends Screen {
 
     @Override
     protected void init() {
-        addDrawableChild(createBooleanOptionButton(width / 2 - 100 - 110, height / 2 - 10 - 12, 200, 20, "interoperability", value -> config.interoperability = value, () -> config.interoperability, () -> MinecraftClient.getInstance().reloadResources()));
-        addDrawableChild(createBooleanOptionButton(width / 2 - 100 + 110, height / 2 - 10 - 12, 200, 20, "clear_fsb_format_sky", value -> config.clearFSBFormatSky = value, () -> config.clearFSBFormatSky, () -> MinecraftClient.getInstance().reloadResources()));
-        addDrawableChild(createBooleanOptionButton(width / 2 - 100 - 110, height / 2 - 10 + 12, 200, 20, "debug_mode", value -> config.debugMode = value, () -> config.debugMode, () -> {}));
+        addDrawableChild(createBooleanOptionButton(this.width / 2 - 100 - 110, this.height / 2 - 10 - 12, 200, 20, "interoperability", value -> config.interoperability = value, () -> config.interoperability, () -> MinecraftClient.getInstance().reloadResources()));
+        addDrawableChild(createBooleanOptionButton(this.width / 2 - 100 + 110, this.height / 2 - 10 - 12, 200, 20, "clear_fsb_format_sky", value -> config.clearFSBFormatSky = value, () -> config.clearFSBFormatSky, this::reloadResourcesIfInterop));
+        addDrawableChild(createBooleanOptionButton(this.width / 2 - 100 - 110, this.height / 2 - 10 + 12, 200, 20, "process_optifine", value -> config.processOptiFine = value, () -> config.processOptiFine, this::reloadResourcesIfInterop));
+        addDrawableChild(createBooleanOptionButton(this.width / 2 - 100 + 110, this.height / 2 - 10 + 12, 200, 20, "process_mcpatcher", value -> config.processMCPatcher = value, () -> config.processMCPatcher, this::reloadResourcesIfInterop));
+        addDrawableChild(createBooleanOptionButton(this.width / 2 - 100 - 110, this.height / 2 - 10 + 36, 200, 20, "debug_mode", value -> config.debugMode = value, () -> config.debugMode, () -> {}));
 
-        addDrawableChild(new ButtonWidget(width / 2 - 100, height - 40, 200, 20, ScreenTexts.DONE, button -> close()));
+        addDrawableChild(new ButtonWidget(this.width / 2 - 100, this.height - 40, 200, 20, ScreenTexts.DONE, button -> close()));
     }
 
+    private void reloadResourcesIfInterop() {
+        if (this.config.interoperability) {
+            this.client.reloadResources();
+        }
+    }
+    
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         renderBackground(matrices);
-        drawCenteredText(matrices, textRenderer, title, width / 2, 30, 0xFFFFFF);
+        drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 30, 0xFFFFFF);
         super.render(matrices, mouseX, mouseY, delta);
     }
 
     @Override
     public void close() {
-        client.setScreen(parent);
+        this.client.setScreen(parent);
     }
 
     @Override
     public void removed() {
-        config.writeChanges();
+        this.config.writeChanges();
     }
 
     private static String getTranslationKey(String optionKey) {
@@ -57,7 +65,7 @@ public class FSBInteropConfigScreen extends Screen {
 
     private ButtonWidget.TooltipSupplier createDefaultTooltipSupplier(StringVisitable text) {
         return (button, matrices, mouseX, mouseY) -> {
-            renderOrderedTooltip(matrices, textRenderer.wrapLines(text, width / 100 * 100 / 2), mouseX, mouseY);
+            renderOrderedTooltip(matrices, this.textRenderer.wrapLines(text, this.width / 100 * 100 / 2), mouseX, mouseY);
         };
     }
 
