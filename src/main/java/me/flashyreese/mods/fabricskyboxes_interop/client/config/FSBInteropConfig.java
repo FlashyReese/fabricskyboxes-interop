@@ -28,6 +28,8 @@ public class FSBInteropConfig {
     public boolean interoperability = true;
     public boolean debugMode = false;
     public boolean clearFSBFormatSky = false;
+    public boolean processOptiFine = true;
+    public boolean processMCPatcher = false;
 
     public static FSBInteropConfig load(File file) {
         FSBInteropConfig config;
