@@ -3,7 +3,7 @@ plugins {
     id 'maven-publish'
 }
 
-version = project.mod_version
+version = "${project.mod_version}+mc${project.minecraft_version}-${getVersionMetadata()}"
 group = project.maven_group
 
 repositories {
@@ -96,4 +96,15 @@ publishing {
             }
         }
     }
+}
+
+static def getVersionMetadata() {
+    def build_id = System.getenv("GITHUB_RUN_NUMBER")
+
+    // CI builds only
+    if (build_id != null) {
+        return "build.${build_id}"
+    }
+    // No tracking information could be found about the build
+    return "unknown"
 }
