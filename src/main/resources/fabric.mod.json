@@ -9,6 +9,7 @@
   ],
   "contact": {},
   "license": "MIT",
+  "icon": "assets/fsb-interop/icon.png",
   "environment": "client",
   "entrypoints": {
     "modmenu": [
