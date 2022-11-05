@@ -24,11 +24,11 @@ public class FSBInteropConfigScreen extends Screen {
 
     @Override
     protected void init() {
-        addDrawableChild(createBooleanOptionButton(width / 2 - 100 - 110, height / 2 - 10 - 12, 200, 20, "interoperability", value -> config.interoperability = value, () -> config.interoperability, () -> MinecraftClient.getInstance().reloadResources()));
-        addDrawableChild(createBooleanOptionButton(width / 2 - 100 + 110, height / 2 - 10 - 12, 200, 20, "clear_fsb_format_sky", value -> config.clearFSBFormatSky = value, () -> config.clearFSBFormatSky, () -> MinecraftClient.getInstance().reloadResources()));
-        addDrawableChild(createBooleanOptionButton(width / 2 - 100 - 110, height / 2 - 10 + 12, 200, 20, "debug_mode", value -> config.debugMode = value, () -> config.debugMode, () -> {}));
+        addButton(createBooleanOptionButton(width / 2 - 100 - 110, height / 2 - 10 - 12, 200, 20, "interoperability", value -> config.interoperability = value, () -> config.interoperability, () -> MinecraftClient.getInstance().reloadResources()));
+        addButton(createBooleanOptionButton(width / 2 - 100 + 110, height / 2 - 10 - 12, 200, 20, "clear_fsb_format_sky", value -> config.clearFSBFormatSky = value, () -> config.clearFSBFormatSky, () -> MinecraftClient.getInstance().reloadResources()));
+        addButton(createBooleanOptionButton(width / 2 - 100 - 110, height / 2 - 10 + 12, 200, 20, "debug_mode", value -> config.debugMode = value, () -> config.debugMode, () -> {}));
 
-        addDrawableChild(new ButtonWidget(width / 2 - 100, height - 40, 200, 20, ScreenTexts.DONE, button -> onClose()));
+        addButton(new ButtonWidget(width / 2 - 100, height - 40, 200, 20, ScreenTexts.DONE, button -> onClose()));
     }
 
     @Override
@@ -40,7 +40,7 @@ public class FSBInteropConfigScreen extends Screen {
 
     @Override
     public void onClose() {
-        client.setScreen(parent);
+        client.openScreen(parent);
     }
 
     @Override

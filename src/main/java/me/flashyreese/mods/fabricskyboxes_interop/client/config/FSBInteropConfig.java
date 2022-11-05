@@ -4,8 +4,8 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.FileReader;
@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.lang.reflect.Modifier;
 
 public class FSBInteropConfig {
-    private static final Logger logger = LoggerFactory.getLogger("FSB-Interop Config");
+    private static final Logger logger = LogManager.getLogger("FSB-Interop Config");
     private static final Gson GSON = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setPrettyPrinting()

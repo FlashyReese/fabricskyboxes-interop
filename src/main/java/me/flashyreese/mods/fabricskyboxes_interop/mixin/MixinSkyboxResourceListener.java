@@ -13,8 +13,8 @@ import me.flashyreese.mods.fabricskyboxes_interop.utils.Utils;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.InvalidIdentifierException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 
 @Mixin(SkyboxResourceListener.class)
 public class MixinSkyboxResourceListener {
-    private final Logger logger = LoggerFactory.getLogger("FSB-Interop");
+    private final Logger logger = LogManager.getLogger("FSB-Interop");
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
