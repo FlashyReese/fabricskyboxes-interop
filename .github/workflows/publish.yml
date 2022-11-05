@@ -27,10 +27,10 @@ jobs:
       - name: Publish to Modrinth & CurseForge
         uses: Kir-Antipov/mc-publish@v3.2
         with:
-          modrinth-id: PtjYWJkn
+          modrinth-id: HpdHOPOp
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
 
-          curseforge-id: 447673
+          curseforge-id: 697845
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
 
           github-token: ${{ secrets.GITHUB_TOKEN }}
