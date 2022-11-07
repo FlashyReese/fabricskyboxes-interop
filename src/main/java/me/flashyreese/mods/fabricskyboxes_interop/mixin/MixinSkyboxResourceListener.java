@@ -10,10 +10,7 @@ import io.github.amerebagatelle.fabricskyboxes.util.object.MinMaxEntry;
 import me.flashyreese.mods.fabricskyboxes_interop.client.config.FSBInteropConfig;
 import me.flashyreese.mods.fabricskyboxes_interop.utils.ResourceManagerHelper;
 import me.flashyreese.mods.fabricskyboxes_interop.utils.Utils;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.resource.ResourceManager;
-import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.InvalidIdentifierException;
 import org.slf4j.Logger;
@@ -43,20 +40,18 @@ public class MixinSkyboxResourceListener {
     @Inject(method = "reload", at = @At(value = "TAIL"))
     public void reload(ResourceManager manager, CallbackInfo ci) {
         if (FSBInteropConfig.INSTANCE.interoperability) {
-            MinecraftClient client = MinecraftClient.getInstance();
-            if (FSBInteropConfig.INSTANCE.clearFSBFormatSky) {
-                this.logger.warn("Removing existing FSB skies...");
-                SkyboxManager.getInstance().clearSkyboxes();
-                if (client.player != null) {
-                    client.player.sendMessage(new TranslatableText("fsb-interop.clear_fsb_format_sky.message").formatted(Formatting.RED), false);
+            if (FSBInteropConfig.INSTANCE.preferFSBNative) {
+                if (!((SkyboxManagerAccessor) SkyboxManager.getInstance()).getSkyboxes().isEmpty()) {
+                    this.logger.info("FSB Native is preferred and existing skyboxes already detected! No longer converting MCP/OptiFine formats!");
+                    return;
                 }
             }
+            this.logger.warn("Removing existing FSB skies...");
+            this.logger.warn("FSB-Interop is preventing native FabricSkyBoxes resource packs from loading!");
+            this.logger.warn("FSB-Interop is converting MCPatcher/OptiFine custom skies resource packs! Any visual bugs are likely caused by FSB-Interop. Please do not report these issues to FabricSkyBoxes nor Resource Pack creators!");
+            SkyboxManager.getInstance().clearSkyboxes();
             this.logger.info("Looking for OptiFine/MCPatcher Skies...");
             this.convert(new ResourceManagerHelper(manager));
-
-            if (client.player != null) {
-                client.player.sendMessage(new TranslatableText("fsb-interop.interoperability.message").formatted(Formatting.GOLD), false);
-            }
         }
     }
 
@@ -153,7 +148,7 @@ public class MixinSkyboxResourceListener {
                                     return;
                                 }
 
-                                this.convert(id, textureId, properties, world);
+                                this.convert(name, id, textureId, properties, world);
                             }
                         }));
     }
@@ -166,7 +161,7 @@ public class MixinSkyboxResourceListener {
      * @param properties   The MCPatcher properties file.
      * @param world        The world name
      */
-    private void convert(Identifier propertiesId, Identifier textureId, Properties properties, String world) {
+    private void convert(String skyName, Identifier propertiesId, Identifier textureId, Properties properties, String world) {
         JsonObject json = new JsonObject();
 
         json.addProperty("schemaVersion", 2);
@@ -184,7 +179,7 @@ public class MixinSkyboxResourceListener {
         json.addProperty("texture", textureId.toString());
 
         JsonObject propertiesObject = new JsonObject();
-        this.processProperties(propertiesObject, properties);
+        this.processProperties(propertiesObject, properties, skyName);
         json.add("properties", propertiesObject);
 
         JsonObject conditionsObject = new JsonObject();
@@ -209,7 +204,14 @@ public class MixinSkyboxResourceListener {
      * @param json       The properties object for FabricSkyboxes
      * @param properties The sky properties
      */
-    private void processProperties(JsonObject json, Properties properties) {
+    private void processProperties(JsonObject json, Properties properties, String skyName) {
+        // Adds priority
+        String skyNumberString = skyName.replace("sky", "");
+        int skyNumber = Utils.parseInt(skyNumberString, 0);
+        if (skyNumberString.equals(String.valueOf(skyNumber))) {
+            json.addProperty("priority", skyNumber);
+        }
+
         // Convert fade
         JsonObject fade = new JsonObject();
         if (properties.containsKey("startFadeIn") && properties.containsKey("endFadeIn") && properties.containsKey("endFadeOut")) {
@@ -308,9 +310,9 @@ public class MixinSkyboxResourceListener {
 
         // Heights -> yRanges
         if (properties.containsKey("heights")) {
-            List<MinMaxEntry> minMaxEntries = Utils.parseMinMaxEntries(properties.getProperty("heights"));
+            List<MinMaxEntry> minMaxEntries = Utils.parseMinMaxEntriesNegative(properties.getProperty("heights"));
 
-            if (minMaxEntries.size() > 0) {
+            if (!minMaxEntries.isEmpty()) {
                 JsonArray jsonYRanges = new JsonArray();
                 minMaxEntries.forEach(minMaxEntry -> {
                     JsonObject minMax = new JsonObject();
@@ -319,6 +321,33 @@ public class MixinSkyboxResourceListener {
                     jsonYRanges.add(minMax);
                 });
                 json.add("yRanges", jsonYRanges);
+            }
+        }
+
+        // Days Loop -> Loop
+        if (properties.containsKey("days")) {
+            List<MinMaxEntry> minMaxEntries = Utils.parseMinMaxEntries(properties.getProperty("days"));
+
+            if (minMaxEntries.size() > 0) {
+                JsonObject loopObject = new JsonObject();
+
+                JsonArray loopRange = new JsonArray();
+                minMaxEntries.forEach(minMaxEntry -> {
+                    JsonObject minMax = new JsonObject();
+                    minMax.addProperty("min", minMaxEntry.getMin());
+                    minMax.addProperty("max", minMaxEntry.getMax());
+                    loopRange.add(minMax);
+                });
+
+                int value = 8;
+                if (properties.containsKey("daysLoop")) {
+                    value = Utils.parseInt(properties.getProperty("daysLoop"), 8);
+                }
+                loopObject.addProperty("days", value);
+
+                loopObject.add("ranges", loopRange);
+
+                json.add("loop", loopObject);
             }
         }
     }
