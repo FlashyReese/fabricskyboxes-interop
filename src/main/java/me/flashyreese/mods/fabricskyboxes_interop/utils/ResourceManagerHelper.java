@@ -6,7 +6,6 @@ import net.minecraft.util.Identifier;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.stream.Stream;
 
 public class ResourceManagerHelper {
@@ -16,8 +15,8 @@ public class ResourceManagerHelper {
         this.resourceManager = resourceManager;
     }
 
-    public Stream<Identifier> searchIn(Identifier parent) {
-        return this.resourceManager.findResources(parent.getPath(), path -> true).stream();
+    public Stream<Identifier> searchIn(String parent) {
+        return this.resourceManager.findResources(parent, path -> true).stream();
     }
 
     public InputStream getInputStream(Identifier identifier) {
@@ -27,9 +26,5 @@ public class ResourceManagerHelper {
         } catch (IOException e) {
             return null;
         }
-    }
-
-    public Collection<String> getNamespaces() {
-        return this.resourceManager.getAllNamespaces();
     }
 }
