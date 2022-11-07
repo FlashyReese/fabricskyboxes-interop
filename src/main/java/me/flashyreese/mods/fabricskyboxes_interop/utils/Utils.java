@@ -31,6 +31,44 @@ public final class Utils {
         String[] strings = str.split(" ,");
 
         for (String s : strings) {
+            MinMaxEntry minMaxEntry = parseMinMaxEntry(s);
+
+            if (minMaxEntry != null) {
+                minMaxEntries.add(minMaxEntry);
+            }
+        }
+
+        return minMaxEntries;
+    }
+
+    private static MinMaxEntry parseMinMaxEntry(String str) {
+        if (str != null) {
+            if (str.contains("-")) {
+                String[] strings = str.split("-");
+                if (strings.length == 2) {
+                    int min = parseInt(strings[0], -1);
+                    int max = parseInt(strings[1], -1);
+                    if (min >= 0 && max >= 0) {
+                        return new MinMaxEntry(min, max);
+                    }
+                }
+            } else {
+                int value = parseInt(str, -1);
+
+                if (value >= 0) {
+                    return new MinMaxEntry(value, value);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static List<MinMaxEntry> parseMinMaxEntriesNegative(String str) {
+        List<MinMaxEntry> minMaxEntries = new ArrayList<>();
+        String[] strings = str.split(" ,");
+
+        for (String s : strings) {
             MinMaxEntry minMaxEntry = parseMinMaxEntryNegative(s);
 
             if (minMaxEntry != null) {
