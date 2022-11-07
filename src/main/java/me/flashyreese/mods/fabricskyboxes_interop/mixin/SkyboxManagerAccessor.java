@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.List;
 
-@Mixin(SkyboxManager.class)
+@Mixin(value = SkyboxManager.class, remap = false)
 public interface SkyboxManagerAccessor {
     @Accessor("skyboxes")
     List<AbstractSkybox> getSkyboxes();
