@@ -95,6 +95,11 @@ public class MixinSkyboxResourceListener {
                         if (world == null || name == null)
                             return;
 
+                        if (name.equals("moon_phases") || name.equals("sun")) {
+                            this.logger.info("Skipping {}, moon_phases/sun aren't supported!", id);
+                            return;
+                        }
+
                         this.logger.info("Converting {} to FSB Format...", id);
 
                         InputStream inputStream = resourceManagerHelper.getInputStream(id);
