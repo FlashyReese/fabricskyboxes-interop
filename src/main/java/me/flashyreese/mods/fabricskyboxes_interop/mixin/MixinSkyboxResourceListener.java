@@ -75,6 +75,19 @@ public class MixinSkyboxResourceListener {
                 .map(namespace -> new Identifier(namespace, skyParent))
                 .forEach(parent -> resourceManagerHelper.searchIn(parent)
                         .filter(id -> id.getPath().endsWith(".properties"))
+                        .sorted(Comparator.comparing(Identifier::getPath, (id1, id2) -> {
+                            // Sorting for older versions of FSB without priority
+                            Matcher matcherId1 = pattern.matcher(id1);
+                            Matcher matcherId2 = pattern.matcher(id2);
+                            if (matcherId1.find() && matcherId2.find()) {
+                                int id1No = Utils.parseInt(matcherId1.group("name").replace("sky", ""), -1);
+                                int id2No = Utils.parseInt(matcherId2.group("name").replace("sky", ""), -1);
+                                if (id1No >= 0 && id2No >= 0) {
+                                    return id1No - id2No;
+                                }
+                            }
+                            return 0;
+                        }))
                         .forEach(id -> {
                             Matcher matcher = pattern.matcher(id.getPath());
                             if (matcher.find()) {
