@@ -71,99 +71,97 @@ public class MixinSkyboxResourceListener {
      * @param pattern               The pattern for namespace
      */
     private void convertNamespace(ResourceManagerHelper resourceManagerHelper, String skyParent, Pattern pattern) {
-        resourceManagerHelper.getNamespaces().stream()
-                .map(namespace -> new Identifier(namespace, skyParent))
-                .forEach(parent -> resourceManagerHelper.searchIn(parent)
-                        .filter(id -> id.getPath().endsWith(".properties"))
-                        .sorted(Comparator.comparing(Identifier::getPath, (id1, id2) -> {
-                            // Sorting for older versions of FSB without priority
-                            Matcher matcherId1 = pattern.matcher(id1);
-                            Matcher matcherId2 = pattern.matcher(id2);
-                            if (matcherId1.find() && matcherId2.find()) {
-                                int id1No = Utils.parseInt(matcherId1.group("name").replace("sky", ""), -1);
-                                int id2No = Utils.parseInt(matcherId2.group("name").replace("sky", ""), -1);
-                                if (id1No >= 0 && id2No >= 0) {
-                                    return id1No - id2No;
+        resourceManagerHelper.searchIn(skyParent)
+                .filter(id -> id.getPath().endsWith(".properties"))
+                .sorted(Comparator.comparing(Identifier::getPath, (id1, id2) -> {
+                    // Sorting for older versions of FSB without priority
+                    Matcher matcherId1 = pattern.matcher(id1);
+                    Matcher matcherId2 = pattern.matcher(id2);
+                    if (matcherId1.find() && matcherId2.find()) {
+                        int id1No = Utils.parseInt(matcherId1.group("name").replace("sky", ""), -1);
+                        int id2No = Utils.parseInt(matcherId2.group("name").replace("sky", ""), -1);
+                        if (id1No >= 0 && id2No >= 0) {
+                            return id1No - id2No;
+                        }
+                    }
+                    return 0;
+                }))
+                .forEach(id -> {
+                    Matcher matcher = pattern.matcher(id.getPath());
+                    if (matcher.find()) {
+                        String world = matcher.group("world");
+                        String name = matcher.group("name");
+
+                        if (world == null || name == null)
+                            return;
+
+                        this.logger.info("Converting {} to FSB Format...", id);
+
+                        InputStream inputStream = resourceManagerHelper.getInputStream(id);
+                        if (inputStream == null) {
+                            if (FSBInteropConfig.INSTANCE.debugMode) {
+                                this.logger.error("Error trying to read namespaced identifier: {}", id);
+                            }
+                            return;
+                        }
+
+                        Properties properties = new Properties();
+                        try {
+                            properties.load(inputStream);
+                        } catch (IOException e) {
+                            if (FSBInteropConfig.INSTANCE.debugMode) {
+                                this.logger.error("Error trying to read namespaced identifier: {}", id);
+                                e.printStackTrace();
+                            }
+                            return;
+                        } finally {
+                            try {
+                                inputStream.close();
+                            } catch (IOException e) {
+                                if (FSBInteropConfig.INSTANCE.debugMode) {
+                                    this.logger.error("Error trying to close input stream at namespaced identifier: {}", id);
+                                    e.printStackTrace();
                                 }
                             }
-                            return 0;
-                        }))
-                        .forEach(id -> {
-                            Matcher matcher = pattern.matcher(id.getPath());
-                            if (matcher.find()) {
-                                String world = matcher.group("world");
-                                String name = matcher.group("name");
+                        }
 
-                                if (world == null || name == null)
-                                    return;
-
-                                this.logger.info("Converting {} to FSB Format...", id);
-
-                                InputStream inputStream = resourceManagerHelper.getInputStream(id);
-                                if (inputStream == null) {
-                                    if (FSBInteropConfig.INSTANCE.debugMode) {
-                                        this.logger.error("Error trying to read namespaced identifier: {}", id);
-                                    }
-                                    return;
-                                }
-
-                                Properties properties = new Properties();
-                                try {
-                                    properties.load(inputStream);
-                                } catch (IOException e) {
-                                    if (FSBInteropConfig.INSTANCE.debugMode) {
-                                        this.logger.error("Error trying to read namespaced identifier: {}", id);
-                                        e.printStackTrace();
-                                    }
-                                    return;
-                                } finally {
-                                    try {
-                                        inputStream.close();
-                                    } catch (IOException e) {
-                                        if (FSBInteropConfig.INSTANCE.debugMode) {
-                                            this.logger.error("Error trying to close input stream at namespaced identifier: {}", id);
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                }
-
-                                Identifier textureId;
-                                if (properties.containsKey("source")) {
-                                    String source = properties.getProperty("source");
-                                    try {
-                                        if (source.startsWith("./")) {
-                                            textureId = new Identifier(id.getNamespace(), parent.getPath() + String.format("/%s/%s", world, source.substring(2)));
-                                        } else if (source.startsWith("assets/")) {
-                                            int firstIndex = source.indexOf("/") + 1;
-                                            int secondIndex = source.indexOf("/", firstIndex);
-                                            String sourceNamespace = source.substring(firstIndex, secondIndex);
-                                            textureId = new Identifier(sourceNamespace, source.substring(secondIndex + 1));
-                                        } else {
-                                            int firstIndex = source.indexOf("/") + 1;
-                                            String sourceNamespace = source.substring(0, firstIndex - 1);
-                                            textureId = new Identifier(sourceNamespace, source.substring(firstIndex));
-                                        }
-                                    } catch (InvalidIdentifierException e) {
-                                        if (FSBInteropConfig.INSTANCE.debugMode) {
-                                            this.logger.error("Illegal character in namespaced identifier: {}", source);
-                                        }
-                                        return;
-                                    }
+                        Identifier textureId;
+                        if (properties.containsKey("source")) {
+                            String source = properties.getProperty("source");
+                            try {
+                                if (source.startsWith("./")) {
+                                    textureId = new Identifier(id.getNamespace(), skyParent + String.format("/%s/%s", world, source.substring(2)));
+                                } else if (source.startsWith("assets/")) {
+                                    int firstIndex = source.indexOf("/") + 1;
+                                    int secondIndex = source.indexOf("/", firstIndex);
+                                    String sourceNamespace = source.substring(firstIndex, secondIndex);
+                                    textureId = new Identifier(sourceNamespace, source.substring(secondIndex + 1));
                                 } else {
-                                    textureId = new Identifier(id.getNamespace(), parent.getPath() + String.format("/%s/%s.png", world, name));
+                                    int firstIndex = source.indexOf("/") + 1;
+                                    String sourceNamespace = source.substring(0, firstIndex - 1);
+                                    textureId = new Identifier(sourceNamespace, source.substring(firstIndex));
                                 }
-
-                                InputStream textureInputStream = resourceManagerHelper.getInputStream(textureId);
-                                if (textureInputStream == null) {
-                                    if (FSBInteropConfig.INSTANCE.debugMode) {
-                                        this.logger.error("Unable to find/read namespaced identifier: {}", textureId);
-                                    }
-                                    return;
+                            } catch (InvalidIdentifierException e) {
+                                if (FSBInteropConfig.INSTANCE.debugMode) {
+                                    this.logger.error("Illegal character in namespaced identifier: {}", source);
                                 }
-
-                                this.convert(name, id, textureId, properties, world);
+                                return;
                             }
-                        }));
+                        } else {
+                            textureId = new Identifier(id.getNamespace(), skyParent + String.format("/%s/%s.png", world, name));
+                        }
+
+                        InputStream textureInputStream = resourceManagerHelper.getInputStream(textureId);
+                        if (textureInputStream == null) {
+                            if (FSBInteropConfig.INSTANCE.debugMode) {
+                                this.logger.error("Unable to find/read namespaced identifier: {}", textureId);
+                            }
+                            return;
+                        }
+
+                        this.convert(name, id, textureId, properties, world);
+                    }
+                });
     }
 
     /**

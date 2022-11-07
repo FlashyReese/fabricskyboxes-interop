@@ -17,8 +17,8 @@ public class ResourceManagerHelper {
         this.resourceManager = resourceManager;
     }
 
-    public Stream<Identifier> searchIn(Identifier parent) {
-        return this.resourceManager.findResources(parent.getPath(), path -> path.getNamespace().equals(parent.getNamespace())).keySet().stream();
+    public Stream<Identifier> searchIn(String parent) {
+        return this.resourceManager.findResources(parent, path -> true).keySet().stream();
     }
 
     public InputStream getInputStream(Identifier identifier) {
@@ -30,9 +30,5 @@ public class ResourceManagerHelper {
         } catch (IOException e) {
             return null;
         }
-    }
-
-    public Collection<String> getNamespaces() {
-        return this.resourceManager.getAllNamespaces();
     }
 }
