@@ -27,7 +27,7 @@ public class FSBInteropConfig {
 
     public boolean interoperability = true;
     public boolean debugMode = false;
-    public boolean clearFSBFormatSky = false;
+    public boolean preferFSBNative = true;
     public boolean processOptiFine = true;
     public boolean processMCPatcher = false;
 

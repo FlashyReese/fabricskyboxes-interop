@@ -25,7 +25,7 @@ public class FSBInteropConfigScreen extends Screen {
     @Override
     protected void init() {
         addButton(createBooleanOptionButton(this.width / 2 - 100 - 110, this.height / 2 - 10 - 12, 200, 20, "interoperability", value -> config.interoperability = value, () -> config.interoperability, () -> MinecraftClient.getInstance().reloadResources()));
-        addButton(createBooleanOptionButton(this.width / 2 - 100 + 110, this.height / 2 - 10 - 12, 200, 20, "clear_fsb_format_sky", value -> config.clearFSBFormatSky = value, () -> config.clearFSBFormatSky, this::reloadResourcesIfInterop));
+        addButton(createBooleanOptionButton(this.width / 2 - 100 + 110, this.height / 2 - 10 - 12, 200, 20, "prefer_fsb_native", value -> config.preferFSBNative = value, () -> config.preferFSBNative, this::reloadResourcesIfInterop));
         addButton(createBooleanOptionButton(this.width / 2 - 100 - 110, this.height / 2 - 10 + 12, 200, 20, "process_optifine", value -> config.processOptiFine = value, () -> config.processOptiFine, this::reloadResourcesIfInterop));
         addButton(createBooleanOptionButton(this.width / 2 - 100 + 110, this.height / 2 - 10 + 12, 200, 20, "process_mcpatcher", value -> config.processMCPatcher = value, () -> config.processMCPatcher, this::reloadResourcesIfInterop));
         addButton(createBooleanOptionButton(this.width / 2 - 100 - 110, this.height / 2 - 10 + 36, 200, 20, "debug_mode", value -> config.debugMode = value, () -> config.debugMode, () -> {}));

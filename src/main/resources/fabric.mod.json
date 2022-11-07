@@ -16,11 +16,16 @@
       "me.flashyreese.mods.fabricskyboxes_interop.client.config.ModMenuApiImpl"
     ]
   },
+  "custom": {
+    "modmenu": {
+      "parent": "fabricskyboxes"
+    }
+  },
   "mixins": [
     "fsb-interop.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.14",
-    "fabricskyboxes": ">=0.6"
+    "fabricskyboxes": ">=0.6.1"
   }
 }
