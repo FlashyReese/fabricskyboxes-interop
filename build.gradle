@@ -32,7 +32,7 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
     // FabricSkyBoxes
-    modImplementation("maven.modrinth:fabricskyboxes:0.6.0-mc1.17.1")
+    modImplementation("maven.modrinth:fabricskyboxes:0.6.1-mc1.17.1")
 
     // Mod Menu
     modImplementation('com.terraformersmc:modmenu:2.0.16') {
