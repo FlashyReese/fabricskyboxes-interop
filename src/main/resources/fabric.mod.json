@@ -26,6 +26,6 @@
   ],
   "depends": {
     "fabricloader": ">=0.14",
-    "fabricskyboxes": ">=0.6"
+    "fabricskyboxes": ">=0.6.1"
   }
 }
