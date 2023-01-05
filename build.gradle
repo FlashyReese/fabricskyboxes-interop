@@ -6,6 +6,9 @@ plugins {
 version = "${project.mod_version}+mc${project.minecraft_version}-${getVersionMetadata()}"
 group = project.maven_group
 
+sourceCompatibility = JavaVersion.VERSION_16
+targetCompatibility = JavaVersion.VERSION_16
+
 repositories {
     maven {
         name 'TerraformersMC'
