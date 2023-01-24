@@ -45,9 +45,10 @@ public class MixinSkyboxResourceListener {
                     this.logger.info("FSB Native is preferred and existing skyboxes already detected! No longer converting MCP/OptiFine formats!");
                     return;
                 }
+            } else {
+                this.logger.warn("FSB-Interop is preventing native FabricSkyBoxes resource packs from loading!");
             }
             this.logger.warn("Removing existing FSB skies...");
-            this.logger.warn("FSB-Interop is preventing native FabricSkyBoxes resource packs from loading!");
             this.logger.warn("FSB-Interop is converting MCPatcher/OptiFine custom skies resource packs! Any visual bugs are likely caused by FSB-Interop. Please do not report these issues to FabricSkyBoxes nor Resource Pack creators!");
             SkyboxManager.getInstance().clearSkyboxes();
             this.logger.info("Looking for OptiFine/MCPatcher Skies...");
