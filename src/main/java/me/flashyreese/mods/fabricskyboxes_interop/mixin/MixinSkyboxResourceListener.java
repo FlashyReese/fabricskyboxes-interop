@@ -274,8 +274,8 @@ public class MixinSkyboxResourceListener {
         } else {
             //Default South
             jsonAxis.add(0f);
-            jsonAxis.add(0f);
             jsonAxis.add(180f);
+            jsonAxis.add(0f);
         }
         rotation.add("axis", jsonAxis);
 
