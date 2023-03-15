@@ -275,10 +275,34 @@ public class FSBInterop {
         }
         rotation.add("axis", jsonAxis);
 
+        if (properties.containsKey("speed")) {
+            float speed = Float.parseFloat(properties.getProperty("speed"));
+            rotation.addProperty("rotationSpeed", speed);
+
+            // for future usage
+            rotation.addProperty("rotationSpeedZ", speed);
+        } else {
+            rotation.addProperty("rotationSpeed", 1);
+
+            // for future usage
+            rotation.addProperty("rotationSpeedZ", 1);
+        }
+        rotation.addProperty("rotationSpeedX", 0);
+        rotation.addProperty("rotationSpeedY", 0);
+
         json.add("rotation", rotation);
 
-        if (properties.containsKey("speed")) {
-            json.addProperty("rotationSpeed", Float.parseFloat(properties.getProperty("speed")));
+        if (properties.containsKey("transition")) {
+            int duration = Integer.parseInt(properties.getProperty("transition")) * 20;
+            json.addProperty("transitionInDuration", duration);
+            json.addProperty("transitionOutDuration", duration);
+        } else {
+            // (Optional) Transition
+            // Transition time (sec) for the layer brightness.
+            // It is used to smooth sharp transitions, for example between different biomes.
+            // Default is 1 sec.  20 ticks
+            json.addProperty("transitionInDuration", 20);
+            json.addProperty("transitionOutDuration", 20);
         }
     }
 
