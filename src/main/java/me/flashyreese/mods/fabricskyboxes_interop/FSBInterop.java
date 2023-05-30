@@ -209,10 +209,6 @@ public class FSBInterop {
     private void generateOverworldSky() {
         // Fade
         JsonObject fade = new JsonObject();
-        fade.addProperty("startFadeIn", 0);
-        fade.addProperty("endFadeIn", 0);
-        fade.addProperty("startFadeOut", 0);
-        fade.addProperty("endFadeOut", 0);
         fade.addProperty("alwaysOn", true);
 
         // Worlds
@@ -250,11 +246,15 @@ public class FSBInterop {
 
         // Fade
         JsonObject fade = new JsonObject();
-        fade.addProperty("startFadeIn", 0);
-        fade.addProperty("endFadeIn", 0);
-        fade.addProperty("startFadeOut", 0);
-        fade.addProperty("endFadeOut", 0);
         fade.addProperty("alwaysOn", true);
+
+        // Worlds
+        JsonArray worlds = new JsonArray();
+        worlds.add("minecraft:overworld");
+
+        // Conditions
+        JsonObject conditions = new JsonObject();
+        conditions.add("worlds", worlds);
 
         // Properties
         JsonObject properties = new JsonObject();
@@ -273,6 +273,7 @@ public class FSBInterop {
         json.addProperty("type", "monocolor");
         json.add("blend", blend);
         json.add("properties", properties);
+        json.add("conditions", conditions);
         json.add("decorations", decorations);
 
         if (FSBInteropConfig.INSTANCE.debugMode) {
