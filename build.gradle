@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.1-SNAPSHOT'
+    id 'fabric-loom' version '1.2-SNAPSHOT'
     id 'maven-publish'
 }
 
@@ -35,11 +35,11 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
     // FabricSkyBoxes
-    modImplementation("maven.modrinth:fabricskyboxes:0.6.4-mc1.19.4")
-    //modImplementation("io.github.amerebagatelle:fabricskyboxes:0.6.4+mc1.19.3")
+    modImplementation("maven.modrinth:fabricskyboxes:0.7.0-mc1.19.4")
+    //modImplementation("io.github.amerebagatelle:fabricskyboxes:0.7.3+mc1.19.4")
 
     // Mod Menu
-    modImplementation('com.terraformersmc:modmenu:6.1.0-rc.1') {
+    modImplementation('com.terraformersmc:modmenu:6.2.2') {
         exclude group: 'net.fabricmc.fabric-api'
     }
 }

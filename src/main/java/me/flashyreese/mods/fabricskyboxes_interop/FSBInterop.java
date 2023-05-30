@@ -8,6 +8,7 @@ import io.github.amerebagatelle.fabricskyboxes.SkyboxManager;
 import io.github.amerebagatelle.fabricskyboxes.util.object.MinMaxEntry;
 import me.flashyreese.mods.fabricskyboxes_interop.client.config.FSBInteropConfig;
 import me.flashyreese.mods.fabricskyboxes_interop.mixin.SkyboxManagerAccessor;
+import me.flashyreese.mods.fabricskyboxes_interop.utils.BlenderUtil;
 import me.flashyreese.mods.fabricskyboxes_interop.utils.ResourceManagerHelper;
 import me.flashyreese.mods.fabricskyboxes_interop.utils.Utils;
 import net.minecraft.resource.ResourceManager;
@@ -23,15 +24,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class FSBInterop {
-    private final Logger logger = LoggerFactory.getLogger("FSB-Interop");
-
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-
     private static final String OPTIFINE_SKY_PARENT = "optifine/sky";
     private static final Pattern OPTIFINE_SKY_PATTERN = Pattern.compile("optifine/sky/(?<world>\\w+)/(?<name>\\w+).properties$");
     private static final String MCPATCHER_SKY_PARENT = "mcpatcher/sky";
     private static final Pattern MCPATCHER_SKY_PATTERN = Pattern.compile("mcpatcher/sky/(?<world>\\w+)/(?<name>\\w+).properties$");
-
+    private final Logger logger = LoggerFactory.getLogger("FSB-Interop");
 
     public void inject(ResourceManager manager) {
         if (FSBInteropConfig.INSTANCE.interoperability) {
@@ -67,6 +65,9 @@ public class FSBInterop {
      * @param pattern               The pattern for namespace
      */
     private void convertNamespace(ResourceManagerHelper resourceManagerHelper, String skyParent, Pattern pattern) {
+        this.generateOverworldSky();
+        this.generateOverworldDecorations();
+
         resourceManagerHelper.searchIn(skyParent)
                 .filter(id -> id.getPath().endsWith(".properties"))
                 .sorted(Comparator.comparing(Identifier::getPath, (id1, id2) -> {
@@ -126,41 +127,7 @@ public class FSBInterop {
                             }
                         }
 
-                        Identifier textureId;
-                        if (properties.containsKey("source")) {
-                            String source = properties.getProperty("source");
-                            try {
-                                if (source.startsWith("./")) {
-                                    textureId = new Identifier(id.getNamespace(), skyParent + String.format("/%s/%s", world, source.substring(2)));
-                                } else if (source.startsWith("assets/")) {
-                                    int firstIndex = source.indexOf("/") + 1;
-                                    int secondIndex = source.indexOf("/", firstIndex);
-                                    String sourceNamespace = source.substring(firstIndex, secondIndex);
-                                    textureId = new Identifier(sourceNamespace, source.substring(secondIndex + 1));
-                                } else {
-                                    int firstIndex = source.indexOf("/") + 1;
-                                    String sourceNamespace = source.substring(0, firstIndex - 1);
-                                    textureId = new Identifier(sourceNamespace, source.substring(firstIndex));
-                                }
-                            } catch (InvalidIdentifierException e) {
-                                if (FSBInteropConfig.INSTANCE.debugMode) {
-                                    this.logger.error("Illegal character in namespaced identifier: {}", source);
-                                }
-                                return;
-                            }
-                        } else {
-                            textureId = new Identifier(id.getNamespace(), skyParent + String.format("/%s/%s.png", world, name));
-                        }
-
-                        InputStream textureInputStream = resourceManagerHelper.getInputStream(textureId);
-                        if (textureInputStream == null) {
-                            if (FSBInteropConfig.INSTANCE.debugMode) {
-                                this.logger.error("Unable to find/read namespaced identifier: {}", textureId);
-                            }
-                            return;
-                        }
-
-                        this.convert(name, id, textureId, properties, world);
+                        this.convert(resourceManagerHelper, skyParent, name, id, properties, world);
                     }
                 });
     }
@@ -169,38 +136,67 @@ public class FSBInterop {
      * Converts one MCPatcher file to FSB format.
      *
      * @param propertiesId The OptiFine metadata file identifier.
-     * @param textureId    The texture file identifier.
      * @param properties   The MCPatcher properties file.
      * @param world        The world name
      */
-    private void convert(String skyName, Identifier propertiesId, Identifier textureId, Properties properties, String world) {
-        JsonObject json = new JsonObject();
-
-        json.addProperty("schemaVersion", 2);
-        json.addProperty("type", "single-sprite-square-textured");
-
-
+    private void convert(ResourceManagerHelper resourceManagerHelper, String skyParent, String skyName, Identifier propertiesId, Properties properties, String world) {
+        // Blend
         JsonObject blend = new JsonObject();
-        if (properties.containsKey("blend")) {
-            blend.addProperty("type", properties.getProperty("blend"));
+        blend.addProperty("type", "custom");
+        String blendType = properties.getProperty("blend", "add");
+        blend.add("blender", GSON.toJsonTree(BlenderUtil.getInstance().BLEND_MAP.getOrDefault(blendType, BlenderUtil.getInstance().BLEND_MAP.get("add"))).getAsJsonObject());
+
+        // Texture Identifier
+        Identifier textureId;
+        String source = properties.getProperty("source");
+        String namespace;
+        String path;
+        if (source == null) {
+            namespace = propertiesId.getNamespace();
+            path = String.format("%s/%s/%s.png", skyParent, world, skyName);
         } else {
-            blend.addProperty("type", "add");
+            if (source.startsWith("./")) {
+                namespace = propertiesId.getNamespace();
+                path = skyParent + String.format("/%s/%s", world, source.substring(2));
+            } else {
+                String[] parts = source.split("/", 3);
+                if (parts.length == 3 && parts[0].equals("assets")) {
+                    namespace = parts[1];
+                    path = parts[2];
+                } else {
+                    this.logger.error("Invalid source format: {}", source);
+                    return;
+                }
+            }
         }
-        json.add("blend", blend);
+        try {
+            textureId = new Identifier(namespace, path);
+        } catch (InvalidIdentifierException e) {
+            this.logger.error("Illegal character in namespaced identifier: {}", source);
+            return;
+        }
+        InputStream textureInputStream = resourceManagerHelper.getInputStream(textureId);
+        if (textureInputStream == null) {
+            this.logger.error("Unable to find/read namespaced identifier: {}", textureId);
+            return;
+        }
 
-        json.addProperty("texture", textureId.toString());
-
+        // Properties
         JsonObject propertiesObject = new JsonObject();
         this.processProperties(propertiesObject, properties, skyName);
-        json.add("properties", propertiesObject);
 
+        // Conditions
         JsonObject conditionsObject = new JsonObject();
         this.processConditions(conditionsObject, properties, world);
-        json.add("conditions", conditionsObject);
 
-        JsonObject decorationsObject = new JsonObject();
-        decorationsObject.addProperty("showStars", false);
-        json.add("decorations", decorationsObject);
+        // Metadata
+        JsonObject json = new JsonObject();
+        json.addProperty("schemaVersion", 2);
+        json.addProperty("type", "single-sprite-square-textured");
+        json.addProperty("texture", textureId.toString());
+        json.add("blend", blend);
+        json.add("properties", propertiesObject);
+        json.add("conditions", conditionsObject);
 
         if (FSBInteropConfig.INSTANCE.debugMode) {
             this.logger.info("Output for {} conversion:\n{}", propertiesId, GSON.toJson(json));
@@ -208,6 +204,83 @@ public class FSBInterop {
 
         SkyboxManager.getInstance().addSkybox(propertiesId, json);
         this.logger.info("Converted & Added Skybox from {}!", propertiesId);
+    }
+
+    private void generateOverworldSky() {
+        // Fade
+        JsonObject fade = new JsonObject();
+        fade.addProperty("startFadeIn", 0);
+        fade.addProperty("endFadeIn", 0);
+        fade.addProperty("startFadeOut", 0);
+        fade.addProperty("endFadeOut", 0);
+        fade.addProperty("alwaysOn", true);
+
+        // Worlds
+        JsonArray worlds = new JsonArray();
+        worlds.add("minecraft:overworld");
+
+        // Conditions
+        JsonObject conditions = new JsonObject();
+        conditions.add("worlds", worlds);
+
+        // Properties
+        JsonObject properties = new JsonObject();
+        properties.addProperty("priority", Integer.MIN_VALUE);
+        properties.add("fade", fade);
+
+        // Metadata
+        JsonObject json = new JsonObject();
+        json.addProperty("schemaVersion", 2);
+        json.addProperty("type", "overworld");
+        json.add("properties", properties);
+        json.add("conditions", conditions);
+
+        if (FSBInteropConfig.INSTANCE.debugMode) {
+            this.logger.info("Generated Overworld skybox:\n{}", GSON.toJson(json));
+        }
+
+        SkyboxManager.getInstance().addSkybox(Identifier.of("fabricskyboxes-interop", "overworld"), json);
+        this.logger.info("Added generated Overworld skybox!");
+    }
+
+    private void generateOverworldDecorations() {
+        // Blend
+        JsonObject blend = new JsonObject();
+        blend.addProperty("type", "replace");
+
+        // Fade
+        JsonObject fade = new JsonObject();
+        fade.addProperty("startFadeIn", 0);
+        fade.addProperty("endFadeIn", 0);
+        fade.addProperty("startFadeOut", 0);
+        fade.addProperty("endFadeOut", 0);
+        fade.addProperty("alwaysOn", true);
+
+        // Properties
+        JsonObject properties = new JsonObject();
+        properties.addProperty("priority", Integer.MAX_VALUE);
+        properties.add("fade", fade);
+
+        // Decorations
+        JsonObject decorations = new JsonObject();
+        decorations.addProperty("showSun", true);
+        decorations.addProperty("showMoon", true);
+        decorations.addProperty("showStars", true);
+
+        // Metadata
+        JsonObject json = new JsonObject();
+        json.addProperty("schemaVersion", 2);
+        json.addProperty("type", "monocolor");
+        json.add("blend", blend);
+        json.add("properties", properties);
+        json.add("decorations", decorations);
+
+        if (FSBInteropConfig.INSTANCE.debugMode) {
+            this.logger.info("Generated Overworld decorations:\n{}", GSON.toJson(json));
+        }
+
+        SkyboxManager.getInstance().addSkybox(Identifier.of("fabricskyboxes-interop", "overworld-decorations"), json);
+        this.logger.info("Added generated Overworld decorations!");
     }
 
     /**
@@ -220,9 +293,6 @@ public class FSBInterop {
         // Adds priority
         String skyNumberString = skyName.replace("sky", "");
         int skyNumber = Utils.parseInt(skyNumberString, 0);
-        if (skyNumberString.equals(String.valueOf(skyNumber))) {
-            json.addProperty("priority", skyNumber);
-        }
 
         // Convert fade
         JsonObject fade = new JsonObject();
@@ -244,20 +314,9 @@ public class FSBInterop {
             fade.addProperty("startFadeOut", Utils.normalizeTickTime(startFadeOut));
             fade.addProperty("endFadeOut", Utils.normalizeTickTime(endFadeOut));
         } else {
-            fade.addProperty("startFadeIn", 0);
-            fade.addProperty("endFadeIn", 0);
-            fade.addProperty("startFadeOut", 0);
-            fade.addProperty("endFadeOut", 0);
             fade.addProperty("alwaysOn", true);
         }
-        json.add("fade", fade);
 
-        // Convert rotation
-        if (properties.containsKey("rotate")) {
-            json.addProperty("shouldRotate", Boolean.parseBoolean(properties.getProperty("rotate")));
-        }
-
-        JsonObject rotation = new JsonObject();
         JsonArray jsonAxis = new JsonArray();
         if (properties.containsKey("axis")) {
             String[] axis = properties.getProperty("axis").trim().replaceAll(" +", " ").split(" ");
@@ -273,37 +332,25 @@ public class FSBInterop {
             jsonAxis.add(180f);
             jsonAxis.add(0f);
         }
+
+        // Speed -> Rotation Speed Y
+        float speed = Float.parseFloat(properties.getProperty("speed", "1")) * -1;
+
+        // Rotation
+        JsonObject rotation = new JsonObject();
         rotation.add("axis", jsonAxis);
+        rotation.addProperty("rotationSpeedY", speed);
 
-        if (properties.containsKey("speed")) {
-            float speed = Float.parseFloat(properties.getProperty("speed"));
-            rotation.addProperty("rotationSpeed", speed);
+        // Transition -> Transition In/Out Duration
+        int transitionDuration = Integer.parseInt(properties.getProperty("transition", "1")) * 20;
 
-            // for future usage
-            rotation.addProperty("rotationSpeedZ", speed);
-        } else {
-            rotation.addProperty("rotationSpeed", 1);
-
-            // for future usage
-            rotation.addProperty("rotationSpeedZ", 1);
-        }
-        rotation.addProperty("rotationSpeedX", 0);
-        rotation.addProperty("rotationSpeedY", 0);
-
+        // Properties Metadata
+        if (skyNumberString.equals(String.valueOf(skyNumber)))
+            json.addProperty("priority", skyNumber);
+        json.add("fade", fade);
         json.add("rotation", rotation);
-
-        if (properties.containsKey("transition")) {
-            int duration = Integer.parseInt(properties.getProperty("transition")) * 20;
-            json.addProperty("transitionInDuration", duration);
-            json.addProperty("transitionOutDuration", duration);
-        } else {
-            // (Optional) Transition
-            // Transition time (sec) for the layer brightness.
-            // It is used to smooth sharp transitions, for example between different biomes.
-            // Default is 1 sec.  20 ticks
-            json.addProperty("transitionInDuration", 20);
-            json.addProperty("transitionOutDuration", 20);
-        }
+        json.addProperty("transitionInDuration", transitionDuration);
+        json.addProperty("transitionOutDuration", transitionDuration);
     }
 
 
