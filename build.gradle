@@ -35,11 +35,11 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
     // FabricSkyBoxes
-    modImplementation("maven.modrinth:fabricskyboxes:0.7.0-mc1.19.4")
+    modImplementation("maven.modrinth:fabricskyboxes:0.7.1-mc1.20")
     //modImplementation("io.github.amerebagatelle:fabricskyboxes:0.7.3+mc1.19.4")
 
     // Mod Menu
-    modImplementation('com.terraformersmc:modmenu:6.2.2') {
+    modImplementation('com.terraformersmc:modmenu:7.0.0-beta.2') {
         exclude group: 'net.fabricmc.fabric-api'
     }
 }
