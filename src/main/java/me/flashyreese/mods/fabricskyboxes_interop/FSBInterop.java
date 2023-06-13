@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -65,9 +66,8 @@ public class FSBInterop {
      * @param pattern               The pattern for namespace
      */
     private void convertNamespace(ResourceManagerHelper resourceManagerHelper, String skyParent, Pattern pattern) {
-        this.generateOverworldSky();
-        this.generateOverworldDecorations();
-
+        AtomicBoolean hasGeneratedOverworldSky = new AtomicBoolean();
+        AtomicBoolean hasGeneratedEndSky = new AtomicBoolean();
         resourceManagerHelper.searchIn(skyParent)
                 .filter(id -> id.getPath().endsWith(".properties"))
                 .sorted(Comparator.comparing(Identifier::getPath, (id1, id2) -> {
@@ -125,6 +125,17 @@ public class FSBInterop {
                                     e.printStackTrace();
                                 }
                             }
+                        }
+
+                        if (!hasGeneratedOverworldSky.get() && world.equals("world0")) {
+                            this.generateSky("minecraft:overworld", "overworld");
+                            this.generateOverworldDecorations();
+                            hasGeneratedOverworldSky.set(true);
+                        }
+
+                        if (!hasGeneratedEndSky.get() && world.equals("world1")) {
+                            this.generateSky("minecraft:the_end", "end");
+                            hasGeneratedEndSky.set(true);
                         }
 
                         this.convert(resourceManagerHelper, skyParent, name, id, properties, world);
@@ -206,14 +217,14 @@ public class FSBInterop {
         this.logger.info("Converted & Added Skybox from {}!", propertiesId);
     }
 
-    private void generateOverworldSky() {
+    private void generateSky(String dimension, String type) {
         // Fade
         JsonObject fade = new JsonObject();
         fade.addProperty("alwaysOn", true);
 
         // Worlds
         JsonArray worlds = new JsonArray();
-        worlds.add("minecraft:overworld");
+        worlds.add(dimension);
 
         // Conditions
         JsonObject conditions = new JsonObject();
@@ -227,16 +238,16 @@ public class FSBInterop {
         // Metadata
         JsonObject json = new JsonObject();
         json.addProperty("schemaVersion", 2);
-        json.addProperty("type", "overworld");
+        json.addProperty("type", type);
         json.add("properties", properties);
         json.add("conditions", conditions);
 
         if (FSBInteropConfig.INSTANCE.debugMode) {
-            this.logger.info("Generated Overworld skybox:\n{}", GSON.toJson(json));
+            this.logger.info("Generated {} skybox:\n{}", dimension, GSON.toJson(json));
         }
 
         SkyboxManager.getInstance().addSkybox(Identifier.of("fabricskyboxes-interop", "overworld"), json);
-        this.logger.info("Added generated Overworld skybox!");
+        this.logger.info("Added generated {} skybox!", dimension);
     }
 
     private void generateOverworldDecorations() {
