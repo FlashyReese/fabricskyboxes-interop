@@ -2,10 +2,10 @@ package me.flashyreese.mods.fabricskyboxes_interop.client.config;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Text;
 
 import java.util.function.Consumer;
@@ -29,7 +29,7 @@ public class FSBInteropConfigScreen extends Screen {
         addDrawableChild(createBooleanOptionButton(this.width / 2 - 100 + 110, this.height / 2 - 10 + 12, 200, 20, "process_mcpatcher", value -> config.processMCPatcher = value, () -> config.processMCPatcher, this::reloadResourcesIfInterop));
         addDrawableChild(createBooleanOptionButton(this.width / 2 - 100 - 110, this.height / 2 - 10 + 36, 200, 20, "debug_mode", value -> config.debugMode = value, () -> config.debugMode, () -> {}));
 
-        addDrawableChild(new ButtonWidget(this.width / 2 - 100, this.height - 40, 200, 20, ScreenTexts.DONE, button -> close()));
+        addDrawableChild(ButtonWidget.builder(ScreenTexts.DONE, button -> close()).dimensions(this.width / 2 - 100, this.height - 40, 200, 20).build());
     }
 
     private void reloadResourcesIfInterop() {
@@ -63,24 +63,15 @@ public class FSBInteropConfigScreen extends Screen {
         return translationKey + ".tooltip";
     }
 
-    private ButtonWidget.TooltipSupplier createDefaultTooltipSupplier(StringVisitable text) {
-        return (button, matrices, mouseX, mouseY) -> {
-            renderOrderedTooltip(matrices, this.textRenderer.wrapLines(text, this.width / 100 * 100 / 2), mouseX, mouseY);
-        };
-    }
-
     private ButtonWidget createBooleanOptionButton(int x, int y, int width, int height, String key, Consumer<Boolean> consumer, Supplier<Boolean> supplier, Runnable onChange) {
         String translationKey = getTranslationKey(key);
         Text text = Text.translatable(translationKey);
         Text tooltipText = Text.translatable(getTooltipKey(translationKey));
-        return new ButtonWidget(x, y, width, height, ScreenTexts.composeToggleText(text, supplier.get()),
-                button -> {
-                    boolean newValue = !supplier.get();
-                    button.setMessage(ScreenTexts.composeToggleText(text, newValue));
-                    consumer.accept(newValue);
-                    onChange.run();
-                },
-                createDefaultTooltipSupplier(tooltipText)
-        );
+        return ButtonWidget.builder(ScreenTexts.composeToggleText(text, supplier.get()), button -> {
+            boolean newValue = !supplier.get();
+            button.setMessage(ScreenTexts.composeToggleText(text, newValue));
+            consumer.accept(newValue);
+            onChange.run();
+        }).dimensions(x, y, width, height).tooltip(Tooltip.of(tooltipText)).build();
     }
 }
