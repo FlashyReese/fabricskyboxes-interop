@@ -1,0 +1,13 @@
+{
+  "options.fsb-interop.title": "FabricSkyBoxes Interop 配置",
+  "options.fsb-interop.interoperability": "总开关",
+  "options.fsb-interop.interoperability.tooltip": "若开启，此模组将尝试读取/加载 MCPatcher/OptiFine 自定义天空",
+  "options.fsb-interop.process_optifine": "OptiFine 自定义天空",
+  "options.fsb-interop.process_optifine.tooltip": "若开启，此模组将尝试读取/加载 OptiFine 自定义天空",
+  "options.fsb-interop.process_mcpatcher": "MCPatcher 自定义天空",
+  "options.fsb-interop.process_mcpatcher.tooltip": "若开启，此模组将尝试读取/加载 MCPatcher 自定义天空",
+  "options.fsb-interop.debug_mode": "调试模式",
+  "options.fsb-interop.debug_mode.tooltip": "若开启，此模组会在转换过程中输出转换结果和错误日志",
+  "options.fsb-interop.prefer_fsb_native": "优先使用 FSB 天空",
+  "options.fsb-interop.prefer_fsb_native.tooltip": "若开启，如果检测到 FSB 天空，此模组将不会处理/转换 MCPatcher/OptiFine 天空资源"
+}
