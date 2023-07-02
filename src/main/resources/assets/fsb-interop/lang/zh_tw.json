@@ -1,13 +1,13 @@
 {
   "options.fsb-interop.title": "FabricSkyBoxes Interop 設定",
-  "options.fsb-interop.interoperability": "自定義天空",
-  "options.fsb-interop.interoperability.tooltip": "若啟用，此模組將嘗試讀取／載入 MCPatcher/OptiFine 自定義天空。",
-  "options.fsb-interop.process_optifine": "OptiFine 自定義天空",
-  "options.fsb-interop.process_optifine.tooltip": "若啟用，此模組將嘗試讀取／載入 OptiFine 自定義天空。",
-  "options.fsb-interop.process_mcpatcher": "MCPatcher 自定義天空",
-  "options.fsb-interop.process_mcpatcher.tooltip": "若啟用，此模組將嘗試讀取／載入 MCPatcher 自定義天空。",
+  "options.fsb-interop.interoperability": "自訂天空",
+  "options.fsb-interop.interoperability.tooltip": "若啟用，此模組將嘗試讀取／載入 MCPatcher/OptiFine 自訂天空。",
+  "options.fsb-interop.process_optifine": "OptiFine 自訂天空",
+  "options.fsb-interop.process_optifine.tooltip": "若啟用，此模組將嘗試讀取／載入 OptiFine 自訂天空。",
+  "options.fsb-interop.process_mcpatcher": "MCPatcher 自訂天空",
+  "options.fsb-interop.process_mcpatcher.tooltip": "若啟用，此模組將嘗試讀取／載入 MCPatcher 自訂天空。",
   "options.fsb-interop.debug_mode": "除錯模式",
-  "options.fsb-interop.debug_mode.tooltip": "若啟用，此模組會在轉換過程中輸出轉換結果和錯誤日誌。",
+  "options.fsb-interop.debug_mode.tooltip": "若啟用，此模組會在轉換過程中輸出轉換結果和錯誤記錄檔。",
   "options.fsb-interop.prefer_fsb_native": "關閉 FSB 天空",
   "options.fsb-interop.prefer_fsb_native.tooltip": "若啟用，如果偵測到 FSB 天空，此模組將不會處理／轉換 MCPatcher/OptiFine。"
 }
