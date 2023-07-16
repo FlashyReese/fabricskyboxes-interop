@@ -20,6 +20,8 @@ public class BlenderUtil {
 
         // Workaround for `replace`
         BLEND_MAP.put("replace", new FSBBlend(0, 1, 32774, false, false, false, true));
+        //BLEND_MAP.put("replace", new FSBBlend(771, 1, 32774, false, false, false, true));
+        //BLEND_MAP.put("replace", new FSBBlend(770, 771, 32774, false, false, false, true));
     }
 
     public static BlenderUtil getInstance() {
