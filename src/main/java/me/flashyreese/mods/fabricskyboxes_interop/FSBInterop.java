@@ -253,7 +253,8 @@ public class FSBInterop {
     private void generateOverworldDecorations() {
         // Blend
         JsonObject blend = new JsonObject();
-        blend.addProperty("type", "replace");
+        blend.addProperty("type", "replace"); // apparently using custom and the same exact method for mono color just implodes? this makes no sense
+        blend.add("blender", GSON.toJsonTree(BlenderUtil.getInstance().BLEND_MAP.get("replace")).getAsJsonObject());
 
         // Fade
         JsonObject fade = new JsonObject();
@@ -263,9 +264,15 @@ public class FSBInterop {
         JsonArray worlds = new JsonArray();
         worlds.add("minecraft:overworld");
 
+        // Weather
+        JsonArray weather = new JsonArray();
+        weather.add("clear");
+        weather.add("snow");
+
         // Conditions
         JsonObject conditions = new JsonObject();
         conditions.add("worlds", worlds);
+        conditions.add("weather", weather);
 
         // Properties
         JsonObject properties = new JsonObject();
@@ -383,7 +390,17 @@ public class FSBInterop {
                     jsonWeather.add(weather);
                 }
                 json.add("weather", jsonWeather);
+            } else {
+                JsonArray jsonWeather = new JsonArray();
+                jsonWeather.add("clear");
+                jsonWeather.add("snow");
+                json.add("weather", jsonWeather);
             }
+        } else {
+            JsonArray jsonWeather = new JsonArray();
+            jsonWeather.add("clear");
+            jsonWeather.add("snow");
+            json.add("weather", jsonWeather);
         }
 
         // Biomes
