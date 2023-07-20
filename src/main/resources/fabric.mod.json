@@ -19,6 +19,9 @@
   "custom": {
     "modmenu": {
       "parent": "fabricskyboxes"
+    },
+    "links": {
+      "modmenu.discord": "https://discord.gg/MPHVG6MH4e"
     }
   },
   "mixins": [
