@@ -1,5 +1,9 @@
 package me.flashyreese.mods.fabricskyboxes_interop.client.config;
 
+import com.google.gson.Gson;
+import io.github.amerebagatelle.fabricskyboxes.SkyboxManager;
+import me.flashyreese.mods.fabricskyboxes_interop.mixin.SkyboxManagerAccessor;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -7,7 +11,11 @@ import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
+import net.minecraft.util.Util;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -28,6 +36,48 @@ public class FSBInteropConfigScreen extends Screen {
         addDrawableChild(createBooleanOptionButton(this.width / 2 - 100 - 110, this.height / 2 - 10 + 12, 200, 20, "process_optifine", value -> config.processOptiFine = value, () -> config.processOptiFine, this::reloadResourcesIfInterop));
         addDrawableChild(createBooleanOptionButton(this.width / 2 - 100 + 110, this.height / 2 - 10 + 12, 200, 20, "process_mcpatcher", value -> config.processMCPatcher = value, () -> config.processMCPatcher, this::reloadResourcesIfInterop));
         addDrawableChild(createBooleanOptionButton(this.width / 2 - 100 - 110, this.height / 2 - 10 + 36, 200, 20, "debug_mode", value -> config.debugMode = value, () -> config.debugMode, () -> {}));
+        addDrawableChild(ButtonWidget
+                .builder(
+                        Text.translatable(getTranslationKey("dump_data")),
+                        button -> {
+                            Path path = FabricLoader.getInstance().getGameDir().resolve("fsb-interop-dump");
+                            Gson gson = new Gson();
+
+                            try {
+                                Files.delete(path);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+                            if (!path.toFile().exists()) {
+                                path.toFile().mkdirs();
+                            }
+
+                            ((SkyboxManagerAccessor) SkyboxManager.getInstance())
+                                    .getSkyboxes()
+                                    .forEach((identifier, abstractSkybox) -> {
+
+                                        String filename = identifier.toString();
+                                        // Fixme: Replace all characters that are not allowed in file names with underscores
+                                        filename = filename.replaceAll("[^a-zA-Z0-9-_\\.]", "_");
+
+                                        String json = gson.toJson(abstractSkybox);
+
+                                        // Write the JSON data to a file
+                                        try {
+                                            Files.write(path.resolve(filename + ".json"), json.getBytes());
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+                                    });
+
+                            Util.getOperatingSystem().open(path.toUri());
+                        }
+                )
+                .dimensions(this.width / 2 - 100 + 110, this.height / 2 - 10 + 36, 200, 20)
+                .tooltip(Tooltip.of(Text.translatable(getTooltipKey(getTranslationKey("dump_data")))))
+                .build()
+        );
 
         addDrawableChild(ButtonWidget.builder(ScreenTexts.DONE, button -> close()).dimensions(this.width / 2 - 100, this.height - 40, 200, 20).build());
     }
