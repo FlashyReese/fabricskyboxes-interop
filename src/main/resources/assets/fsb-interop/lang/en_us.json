@@ -11,5 +11,5 @@
   "options.fsb-interop.prefer_fsb_native": "Prefer FSB Native",
   "options.fsb-interop.prefer_fsb_native.tooltip": "If enabled, the mod will not process/convert MCPatcher/OptiFine if FSB skies are detected.",
   "options.fsb-interop.dump_data": "Dump Data",
-  "options.fsb-interop.dump_data.tooltip": "Dumps all loaded skies from FSB to \".minecraft/fsb-interop-dump\" including converted ones and opens the directory."
+  "options.fsb-interop.dump_data.tooltip": "Dump converted skies from FSB Interop to \".minecraft/fsb-interop-dump\" and open the directory. (Note: The original directory will be deleted.)"
 }

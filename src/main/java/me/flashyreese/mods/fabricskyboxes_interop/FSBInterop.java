@@ -30,9 +30,23 @@ public class FSBInterop {
     private static final Pattern OPTIFINE_SKY_PATTERN = Pattern.compile("optifine/sky/(?<world>\\w+)/(?<name>\\w+).properties$");
     private static final String MCPATCHER_SKY_PARENT = "mcpatcher/sky";
     private static final Pattern MCPATCHER_SKY_PATTERN = Pattern.compile("mcpatcher/sky/(?<world>\\w+)/(?<name>\\w+).properties$");
+    private static FSBInterop INSTANCE;
+    private final Map<Identifier, String> convertedSkyMap = new HashMap<>();
     private final Logger logger = LoggerFactory.getLogger("FSB-Interop");
 
+    public static FSBInterop getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new FSBInterop();
+        }
+        return INSTANCE;
+    }
+
+    public Map<Identifier, String> getConvertedSkyMap() {
+        return convertedSkyMap;
+    }
+
     public void inject(ResourceManager manager) {
+        this.convertedSkyMap.clear();
         if (FSBInteropConfig.INSTANCE.interoperability) {
             if (FSBInteropConfig.INSTANCE.preferFSBNative) {
                 if (!((SkyboxManagerAccessor) SkyboxManager.getInstance()).getSkyboxes().isEmpty()) {
@@ -214,6 +228,7 @@ public class FSBInterop {
         }
 
         SkyboxManager.getInstance().addSkybox(propertiesId, json);
+        this.convertedSkyMap.put(propertiesId, GSON.toJson(json));
         this.logger.info("Converted & Added Skybox from {}!", propertiesId);
     }
 
@@ -246,7 +261,9 @@ public class FSBInterop {
             this.logger.info("Generated {} skybox:\n{}", dimension, GSON.toJson(json));
         }
 
-        SkyboxManager.getInstance().addSkybox(Identifier.of("fabricskyboxes-interop", "overworld"), json);
+        Identifier identifier = Identifier.of("fabricskyboxes-interop", "overworld");
+        SkyboxManager.getInstance().addSkybox(identifier, json);
+        this.convertedSkyMap.put(identifier, GSON.toJson(json));
         this.logger.info("Added generated {} skybox!", dimension);
     }
 
@@ -297,8 +314,9 @@ public class FSBInterop {
         if (FSBInteropConfig.INSTANCE.debugMode) {
             this.logger.info("Generated Overworld decorations:\n{}", GSON.toJson(json));
         }
-
-        SkyboxManager.getInstance().addSkybox(Identifier.of("fabricskyboxes-interop", "overworld-decorations"), json);
+        Identifier identifier = Identifier.of("fabricskyboxes-interop", "overworld-decorations");
+        SkyboxManager.getInstance().addSkybox(identifier, json);
+        this.convertedSkyMap.put(identifier, GSON.toJson(json));
         this.logger.info("Added generated Overworld decorations!");
     }
 

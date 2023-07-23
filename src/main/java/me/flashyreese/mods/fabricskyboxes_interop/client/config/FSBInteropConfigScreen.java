@@ -1,8 +1,6 @@
 package me.flashyreese.mods.fabricskyboxes_interop.client.config;
 
-import com.google.gson.Gson;
-import io.github.amerebagatelle.fabricskyboxes.SkyboxManager;
-import me.flashyreese.mods.fabricskyboxes_interop.mixin.SkyboxManagerAccessor;
+import me.flashyreese.mods.fabricskyboxes_interop.FSBInterop;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -12,21 +10,34 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class FSBInteropConfigScreen extends Screen {
     private final Screen parent;
     private final FSBInteropConfig config;
+    private final Logger logger = LoggerFactory.getLogger("FSB-Interop");
 
     public FSBInteropConfigScreen(Screen parent, FSBInteropConfig config) {
         super(Text.translatable(getTranslationKey("title")));
         this.parent = parent;
         this.config = config;
+    }
+
+    private static String getTranslationKey(String optionKey) {
+        return "options.fsb-interop." + optionKey;
+    }
+
+    private static String getTooltipKey(String translationKey) {
+        return translationKey + ".tooltip";
     }
 
     @Override
@@ -35,43 +46,72 @@ public class FSBInteropConfigScreen extends Screen {
         addDrawableChild(createBooleanOptionButton(this.width / 2 - 100 + 110, this.height / 2 - 10 - 12, 200, 20, "prefer_fsb_native", value -> config.preferFSBNative = value, () -> config.preferFSBNative, this::reloadResourcesIfInterop));
         addDrawableChild(createBooleanOptionButton(this.width / 2 - 100 - 110, this.height / 2 - 10 + 12, 200, 20, "process_optifine", value -> config.processOptiFine = value, () -> config.processOptiFine, this::reloadResourcesIfInterop));
         addDrawableChild(createBooleanOptionButton(this.width / 2 - 100 + 110, this.height / 2 - 10 + 12, 200, 20, "process_mcpatcher", value -> config.processMCPatcher = value, () -> config.processMCPatcher, this::reloadResourcesIfInterop));
-        addDrawableChild(createBooleanOptionButton(this.width / 2 - 100 - 110, this.height / 2 - 10 + 36, 200, 20, "debug_mode", value -> config.debugMode = value, () -> config.debugMode, () -> {}));
+        addDrawableChild(createBooleanOptionButton(this.width / 2 - 100 - 110, this.height / 2 - 10 + 36, 200, 20, "debug_mode", value -> config.debugMode = value, () -> config.debugMode, () -> {
+        }));
         addDrawableChild(ButtonWidget
                 .builder(
                         Text.translatable(getTranslationKey("dump_data")),
                         button -> {
                             Path path = FabricLoader.getInstance().getGameDir().resolve("fsb-interop-dump");
-                            Gson gson = new Gson();
 
                             try {
-                                Files.delete(path);
+                                // Delete the directory and its contents recursively
+                                if (Files.exists(path)) {
+                                    if (FSBInteropConfig.INSTANCE.debugMode) {
+                                        this.logger.info("Existing dump directory detected. Recursively deleting the contents...");
+                                    }
+                                    Files.walk(path)
+                                            .sorted(Comparator.reverseOrder())
+                                            .map(Path::toFile)
+                                            .filter(File::delete)
+                                            .forEach(file -> {
+                                                if (FSBInteropConfig.INSTANCE.debugMode) {
+                                                    this.logger.info("Deleted: {}", file.getAbsolutePath());
+                                                }
+                                            });
+                                }
                             } catch (IOException e) {
+                                this.logger.error("Error while deleting existing dump directory: {}", e.getMessage());
                                 e.printStackTrace();
                             }
 
-                            if (!path.toFile().exists()) {
-                                path.toFile().mkdirs();
+                            try {
+                                // Create the directory if it doesn't exist
+                                if (!Files.exists(path)) {
+                                    Files.createDirectories(path);
+                                    if (FSBInteropConfig.INSTANCE.debugMode) {
+                                        this.logger.info("Dump directory created: {}", path.toAbsolutePath());
+                                    }
+                                }
+
+                                FSBInterop.getInstance()
+                                        .getConvertedSkyMap()
+                                        .forEach((identifier, json) -> {
+                                            String filename = identifier.toString();
+                                            // Fixme: Replace all characters that are not allowed in file names with underscores
+                                            filename = filename.replaceAll("[^a-zA-Z0-9-_\\.]", "_");
+
+                                            // Write the JSON data to a file
+                                            Path output = path.resolve(filename + ".json");
+                                            try {
+                                                Files.write(output, json.getBytes());
+                                                if (FSBInteropConfig.INSTANCE.debugMode) {
+                                                    this.logger.info("Successfully dumped {} to {}", identifier, output.toAbsolutePath());
+                                                }
+                                            } catch (IOException e) {
+                                                this.logger.error("Error while dumping {} to {}: {}", identifier, output.toAbsolutePath(), e.getMessage());
+                                                e.printStackTrace();
+                                            }
+                                        });
+
+                                if (FSBInteropConfig.INSTANCE.debugMode) {
+                                    this.logger.info("Opening dump directory: {}", path.toAbsolutePath());
+                                }
+                                Util.getOperatingSystem().open(path.toUri());
+                            } catch (IOException e) {
+                                this.logger.error("Error while creating dump directory: {}", e.getMessage());
+                                e.printStackTrace();
                             }
-
-                            ((SkyboxManagerAccessor) SkyboxManager.getInstance())
-                                    .getSkyboxes()
-                                    .forEach((identifier, abstractSkybox) -> {
-
-                                        String filename = identifier.toString();
-                                        // Fixme: Replace all characters that are not allowed in file names with underscores
-                                        filename = filename.replaceAll("[^a-zA-Z0-9-_\\.]", "_");
-
-                                        String json = gson.toJson(abstractSkybox);
-
-                                        // Write the JSON data to a file
-                                        try {
-                                            Files.write(path.resolve(filename + ".json"), json.getBytes());
-                                        } catch (IOException e) {
-                                            e.printStackTrace();
-                                        }
-                                    });
-
-                            Util.getOperatingSystem().open(path.toUri());
                         }
                 )
                 .dimensions(this.width / 2 - 100 + 110, this.height / 2 - 10 + 36, 200, 20)
@@ -87,7 +127,7 @@ public class FSBInteropConfigScreen extends Screen {
             this.client.reloadResources();
         }
     }
-    
+
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         renderBackground(context);
@@ -103,14 +143,6 @@ public class FSBInteropConfigScreen extends Screen {
     @Override
     public void removed() {
         this.config.writeChanges();
-    }
-
-    private static String getTranslationKey(String optionKey) {
-        return "options.fsb-interop." + optionKey;
-    }
-
-    private static String getTooltipKey(String translationKey) {
-        return translationKey + ".tooltip";
     }
 
     private ButtonWidget createBooleanOptionButton(int x, int y, int width, int height, String key, Consumer<Boolean> consumer, Supplier<Boolean> supplier, Runnable onChange) {
