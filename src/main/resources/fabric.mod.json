@@ -21,7 +21,12 @@
       "parent": "fabricskyboxes"
     },
     "links": {
-      "modmenu.discord": "https://discord.gg/MPHVG6MH4e"
+      "modmenu.curseforge": "https://curseforge.com/minecraft/mc-mods/fabricskyboxes-interop",
+      "modmenu.discord": "https://discord.gg/MPHVG6MH4e",
+      "modmenu.donate": "https://ko-fi.com/flashyreese",
+      "modmenu.github_releases": "https://github.com/FlashyReese/fabricskyboxes-interop/releases",
+      "modmenu.kofi": "https://ko-fi.com/flashyreese",
+      "modmenu.modrinth": "https://modrinth.com/mod/fabricskyboxes-interop"
     }
   },
   "mixins": [
