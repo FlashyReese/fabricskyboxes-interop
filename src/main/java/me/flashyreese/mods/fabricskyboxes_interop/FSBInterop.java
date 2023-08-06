@@ -189,8 +189,14 @@ public class FSBInterop {
                     namespace = parts[1];
                     path = parts[2];
                 } else {
-                    this.logger.error("Invalid source format: {}", source);
-                    return;
+                    Identifier sourceIdentifier = Identifier.tryParse(source);
+                    if (sourceIdentifier != null) {
+                        namespace = sourceIdentifier.getNamespace();
+                        path = sourceIdentifier.getPath();
+                    } else {
+                        this.logger.error("Invalid source format: {}", source);
+                        return;
+                    }
                 }
             }
         }
