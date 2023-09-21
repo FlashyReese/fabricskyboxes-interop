@@ -366,23 +366,28 @@ public class FSBInterop {
             List<String> rev = Arrays.asList(axis);
             Collections.reverse(rev);
             axis = rev.toArray(axis);
-            for (String a : axis) {
-                jsonAxis.add(Float.parseFloat(a) * 90);
-            }
+            float x = Float.parseFloat(axis[0]) * 90;
+            float y = Float.parseFloat(axis[1]) * -90; // broken does not work with rotationSpeedY 1 works properly, -1 is broken
+            float z = Float.parseFloat(axis[2]) * -90;
+            jsonAxis.add(x);
+            jsonAxis.add(y);
+            jsonAxis.add(z);
         } else {
-            //Default South
+            jsonAxis.add(90f);
             jsonAxis.add(0f);
-            jsonAxis.add(180f);
             jsonAxis.add(0f);
         }
 
         // Speed -> Rotation Speed Y
-        float speed = Float.parseFloat(properties.getProperty("speed", "1")) * -1;
+        float speed = Float.parseFloat(properties.getProperty("speed", "1"));
+
+        float rotationSpeedY = speed * jsonAxis.get(1).getAsFloat() == 0 ? 1 : -Math.signum(jsonAxis.get(1).getAsFloat()); // only for x and z axis
 
         // Rotation
         JsonObject rotation = new JsonObject();
+        rotation.addProperty("skyboxRotation", false);
         rotation.add("axis", jsonAxis);
-        rotation.addProperty("rotationSpeedY", speed);
+        rotation.addProperty("rotationSpeedY", rotationSpeedY);
 
         // Transition -> Transition In/Out Duration
         int transitionDuration = Integer.parseInt(properties.getProperty("transition", "1")) * 20;
