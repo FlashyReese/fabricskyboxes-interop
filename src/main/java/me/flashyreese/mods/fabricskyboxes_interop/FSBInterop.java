@@ -413,18 +413,16 @@ public class FSBInterop {
         // Weather
         if (properties.containsKey("weather")) {
             String[] weathers = properties.getProperty("weather").split(" ");
+            JsonArray jsonWeather = new JsonArray();
             if (weathers.length > 0) {
-                JsonArray jsonWeather = new JsonArray();
                 for (String weather : weathers) {
                     jsonWeather.add(weather);
                 }
-                json.add("weather", jsonWeather);
             } else {
-                JsonArray jsonWeather = new JsonArray();
                 jsonWeather.add("clear");
                 jsonWeather.add("snow");
-                json.add("weather", jsonWeather);
             }
+            json.add("weather", jsonWeather);
         } else {
             JsonArray jsonWeather = new JsonArray();
             jsonWeather.add("clear");
@@ -469,7 +467,7 @@ public class FSBInterop {
         if (properties.containsKey("days")) {
             List<MinMaxEntry> minMaxEntries = Utils.parseMinMaxEntries(properties.getProperty("days"));
 
-            if (minMaxEntries.size() > 0) {
+            if (!minMaxEntries.isEmpty()) {
                 JsonObject loopObject = new JsonObject();
 
                 JsonArray loopRange = new JsonArray();
