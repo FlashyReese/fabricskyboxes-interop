@@ -267,7 +267,7 @@ public class FSBInterop {
             this.logger.info("Generated {} skybox:\n{}", dimension, GSON.toJson(json));
         }
 
-        Identifier identifier = Identifier.of("fabricskyboxes-interop", "overworld");
+        Identifier identifier = Identifier.of("fabricskyboxes-interop", type);
         SkyboxManager.getInstance().addSkybox(identifier, json);
         this.convertedSkyMap.put(identifier, GSON.toJson(json));
         this.logger.info("Added generated {} skybox!", dimension);
