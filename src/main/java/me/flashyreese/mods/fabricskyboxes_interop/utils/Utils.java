@@ -91,7 +91,9 @@ public final class Utils {
                     int k = parseInt(stripBrackets(strings[1]), Integer.MIN_VALUE);
 
                     if (j != Integer.MIN_VALUE && k != Integer.MIN_VALUE) {
-                        return new MinMaxEntry(j, k);
+                        int min = Math.min(j, k);
+                        int max = Math.max(j, k);
+                        return new MinMaxEntry(min, max);
                     }
                 }
             } else {
