@@ -1,6 +1,6 @@
 {
   "options.fsb-interop.title": "FabricSkyBoxes Interop 配置",
-  "options.fsb-interop.interoperability": "启用天空互通",
+  "options.fsb-interop.interoperability": "总开关",
   "options.fsb-interop.interoperability.tooltip": "若开启，此模组将尝试读取/加载 MCPatcher/OptiFine 自定义天空。",
   "options.fsb-interop.process_optifine": "OptiFine 自定义天空",
   "options.fsb-interop.process_optifine.tooltip": "若开启，此模组将尝试读取/加载 OptiFine 自定义天空。",
